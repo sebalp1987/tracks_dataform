@@ -1,0 +1,11 @@
+js {
+  const constants = require("includes/constants");
+}
+
+config {
+  type: "declaration",
+  database: dataform.projectConfig.defaultDatabase,
+  schema: constants.RAW_DATASET,
+  name: "events",
+  description: "Raw generic events table ingested from multiple sources (e.g., Twitch, Reddit)."
+}

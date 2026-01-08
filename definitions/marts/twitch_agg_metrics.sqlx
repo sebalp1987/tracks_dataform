@@ -1,0 +1,52 @@
+js {
+  const constants = require("includes/constants");
+}
+
+config {
+  type: "incremental",
+  schema: constants.MART_DATASET,
+  name: "twitch_agg_metrics",
+  description: "Aggregated Twitch metrics by date, channel, and game.",
+  tags: ["twitch", "mart"],
+  uniqueKey: ["event_date", "channel", "game_id", "client_id"],
+  bigquery: {
+    partitionBy: "event_date",
+    clusterBy: ["channel", "game_id"]
+  }
+}
+
+WITH base AS (
+  SELECT
+    event_date,
+    channel,
+    game_id,
+    client_id,
+    viewer_count,
+    event_id
+  FROM ${ref("events_twitch")}
+  WHERE TRUE
+    ${when(
+      incremental(),
+      "AND event_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)",
+      ""
+    )}
+)
+
+SELECT
+  event_date,
+  channel,
+  game_id,
+  client_id,
+
+  COUNT(DISTINCT event_id) AS event_count,
+
+  AVG(viewer_count) AS avg_viewer_count,
+
+  MAX(viewer_count) AS max_viewer_count
+
+FROM base
+GROUP BY
+  event_date,
+  channel,
+  game_id,
+  client_id

@@ -1,0 +1,13 @@
+dataformCoreVersion: 3.0.0
+
+defaultProject: aller-data-science
+defaultLocation: EU
+
+defaultDataset: clean_data
+defaultAssertionDataset: clean_data_assertions
+
+vars:
+  raw_dataset: raw_data
+  analytics_dataset: clean_data
+  mart_dataset: clean_data_mart
+  client_id: client_a

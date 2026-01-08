@@ -1,0 +1,70 @@
+js {
+  const constants = require("includes/constants");
+}
+
+config {
+  type: "table",
+  schema: constants.ANALYTICS_DATASET,
+  name: "events_twitch",
+  description: "Clean Twitch events: deduplicated and JSON metadata flattened.",
+  tags: ["twitch", "staging"],
+  bigquery: {
+    partitionBy: "event_date",
+    clusterBy: ["channel", "game_id"]
+  }
+}
+
+WITH raw AS (
+  SELECT
+    event_id,
+    source,
+    client_id,
+    event_type,
+    event_ts,
+    DATE(event_ts) AS event_date,
+    user_id,
+    channel,
+    platform,
+    region,
+    metadata,
+
+    JSON_VALUE(metadata, '$.game_id') AS game_id,
+    JSON_VALUE(metadata, '$.language') AS language,
+    JSON_VALUE(metadata, '$.title') AS title,
+    SAFE_CAST(JSON_VALUE(metadata, '$.viewer_count') AS INT64) AS viewer_count
+  FROM ${ref("events")}
+  WHERE source = "twitch"
+    AND client_id = '${constants.CLIENT_ID}'
+),
+
+deduped AS (
+  SELECT * EXCEPT(row_num)
+  FROM (
+    SELECT
+      raw.*,
+      ROW_NUMBER() OVER (
+        PARTITION BY client_id, event_id
+        ORDER BY event_ts DESC
+      ) AS row_num
+    FROM raw
+  )
+  WHERE row_num = 1
+)
+
+SELECT
+  event_id,
+  source,
+  client_id,
+  event_type,
+  event_ts,
+  event_date,
+  user_id,
+  channel,
+  platform,
+  region,
+  metadata,
+  game_id,
+  language,
+  title,
+  viewer_count
+FROM deduped

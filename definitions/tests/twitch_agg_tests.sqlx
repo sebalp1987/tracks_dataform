@@ -1,0 +1,18 @@
+js {
+  const constants = require("includes/constants");
+}
+
+config {
+  type: "assertion",
+  schema: "events_analytics_assertions",
+  name: "twitch_agg_basic_checks",
+  dependencies: ["twitch_agg_metrics"]
+}
+
+SELECT
+  *
+FROM ${ref("twitch_agg_metrics")}
+WHERE event_date IS NULL
+   OR event_count < 0
+   OR avg_viewer_count < 0
+   OR max_viewer_count < 0
