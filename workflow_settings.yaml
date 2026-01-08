@@ -10,4 +10,5 @@ vars:
   raw_dataset: raw_data
   analytics_dataset: clean_data
   mart_dataset: clean_data_mart
+  assertion_dataset: clean_data_assertions
   client_id: client_a
